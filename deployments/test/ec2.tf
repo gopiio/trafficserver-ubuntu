@@ -11,8 +11,7 @@ module "ec2_instance" {
   key_name                  = "NebulaOps"
   monitoring                = true
   vpc_security_group_ids = [
-    aws_security_group.ec2_sg.id,
-    aws_security_group.ec2_sg_allow_metrics.id
+    aws_security_group.ec2_sg.id
   ]
   subnet_id                   = split(",", data.aws_ssm_parameter.public_subnets.value)[0]
   associate_public_ip_address = true
