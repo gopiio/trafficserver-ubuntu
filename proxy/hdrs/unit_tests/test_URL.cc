@@ -53,10 +53,32 @@ TEST_CASE("ValidateURL", "[proxy][validurl]")
   }
 }
 
+TEST_CASE("Validate Scheme", "[proxy][validscheme]")
+{
+  static const struct {
+    std::string_view text;
+    bool valid;
+  } scheme_test_cases[] = {{"http", true},      {"https", true},      {"example", true},    {"example.", true},
+                           {"example++", true}, {"example--.", true}, {"++example", false}, {"--example", false},
+                           {".example", false}, {"example://", false}};
+
+  for (auto i : scheme_test_cases) {
+    // it's pretty hard to debug with
+    //     CHECK(validate_scheme(i.text) == i.valid);
+
+    std::string_view text = i.text;
+    if (validate_scheme(text) != i.valid) {
+      std::printf("Validation of scheme: \"%s\", expected %s, but not\n", text.data(), (i.valid ? "true" : "false"));
+      CHECK(false);
+    }
+  }
+}
+
 namespace UrlImpl
 {
 bool url_is_strictly_compliant(const char *start, const char *end);
-}
+bool url_is_mostly_compliant(const char *start, const char *end);
+} // namespace UrlImpl
 using namespace UrlImpl;
 
 TEST_CASE("ParseRulesStrictURI", "[proxy][parseuri]")
@@ -69,6 +91,9 @@ TEST_CASE("ParseRulesStrictURI", "[proxy][parseuri]")
                                            {"/path/data?key=value#id", true},
                                            {"/ABCDEFGHIJKLMNOPQRSTUVWXYZ", true},
                                            {"/abcdefghijklmnopqrstuvwxyz", true},
+                                           {"/abcde fghijklmnopqrstuvwxyz", false},
+                                           {"/abcde\tfghijklmnopqrstuvwxyz", false},
+                                           {"/abcdefghijklmnopqrstuvwxyz", false},
                                            {"/0123456789", true},
                                            {":/?#[]@", true},
                                            {"!$&'()*+,;=", true},
@@ -90,6 +115,45 @@ TEST_CASE("ParseRulesStrictURI", "[proxy][parseuri]")
     const char *const uri = i.uri;
     if (url_is_strictly_compliant(uri, uri + strlen(uri)) != i.valid) {
       std::printf("Strictly parse URI: \"%s\", expected %s, but not\n", uri, (i.valid ? "true" : "false"));
+      CHECK(false);
+    }
+  }
+}
+
+TEST_CASE("ParseRulesMostlyStrictURI", "[proxy][parseuri]")
+{
+  const struct {
+    const char *const uri;
+    bool valid;
+  } http_mostly_strict_uri_parsing_test_case[] = {{"//index.html", true},
+                                                  {"/home", true},
+                                                  {"/path/data?key=value#id", true},
+                                                  {"/ABCDEFGHIJKLMNOPQRSTUVWXYZ", true},
+                                                  {"/abcdefghijklmnopqrstuvwxyz", true},
+                                                  {"/abcde fghijklmnopqrstuvwxyz", false},
+                                                  {"/abcde\tfghijklmnopqrstuvwxyz", false},
+                                                  {"/abcdefghijklmnopqrstuvwxyz", false},
+                                                  {"/0123456789", true},
+                                                  {":/?#[]@", true},
+                                                  {"!$&'()*+,;=", true},
+                                                  {"-._~", true},
+                                                  {"%", true},
+                                                  {"\n", false},
+                                                  {"\"", true},
+                                                  {"<", true},
+                                                  {">", true},
+                                                  {"\\", true},
+                                                  {"^", true},
+                                                  {"`", true},
+                                                  {"{", true},
+                                                  {"|", true},
+                                                  {"}", true},
+                                                  {"é", false}}; // Non-printable ascii
+
+  for (auto i : http_mostly_strict_uri_parsing_test_case) {
+    const char *const uri = i.uri;
+    if (url_is_mostly_compliant(uri, uri + strlen(uri)) != i.valid) {
+      std::printf("Mostly strictly parse URI: \"%s\", expected %s, but not\n", uri, (i.valid ? "true" : "false"));
       CHECK(false);
     }
   }

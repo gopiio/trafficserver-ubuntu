@@ -800,7 +800,7 @@ public:
   MgmtByte referer_filter_enabled  = 0;
   MgmtByte referer_format_redirect = 0;
 
-  MgmtByte strict_uri_parsing = 0;
+  MgmtByte strict_uri_parsing = 2;
 
   MgmtByte reverse_proxy_enabled = 0;
   MgmtByte url_remap_required    = 1;
@@ -830,7 +830,8 @@ public:
   MgmtInt http_request_line_max_size = 65535;
   MgmtInt http_hdr_field_max_size    = 131070;
 
-  MgmtByte http_host_sni_policy = 0;
+  MgmtByte http_host_sni_policy         = 0;
+  MgmtByte scheme_proto_mismatch_policy = 2;
 
   // noncopyable
   /////////////////////////////////////

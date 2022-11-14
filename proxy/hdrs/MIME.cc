@@ -557,7 +557,7 @@ checksum_block(const char *s, int len)
   return sum;
 }
 
-#ifdef DEBUG
+#ifdef ENABLE_MIME_SANITY_CHECK
 void
 mime_hdr_sanity_check(MIMEHdrImpl *mh)
 {
@@ -2610,6 +2610,21 @@ mime_parser_parse(MIMEParser *parser, HdrHeap *heap, MIMEHdrImpl *mh, const char
     ///////////////////////
 
     int field_name_wks_idx = hdrtoken_tokenize(field_name.data(), field_name.size());
+
+    if (field_name_wks_idx < 0) {
+      for (auto i : field_name) {
+        if (ParseRules::is_control(i)) {
+          return PARSE_RESULT_ERROR;
+        }
+      }
+    }
+
+    // RFC 9110 Section 5.5. Field Values
+    for (char i : field_value) {
+      if (ParseRules::is_control(i)) {
+        return PARSE_RESULT_ERROR;
+      }
+    }
 
     ///////////////////////////////////////////
     // build and insert the new field object //

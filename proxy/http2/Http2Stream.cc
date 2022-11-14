@@ -233,7 +233,11 @@ Http2Stream::send_request(Http2ConnectionState &cstate)
   this->_http_sm_id = this->_sm->sm_id;
 
   // Convert header to HTTP/1.1 format
-  http2_convert_header_from_2_to_1_1(&_req_header);
+  if (http2_convert_header_from_2_to_1_1(&_req_header) == PARSE_RESULT_ERROR) {
+    // There's no way to cause Bad Request directly at this time.
+    // Set an invalid method so it causes an error later.
+    _req_header.method_set("\xffVOID", 1);
+  }
 
   // Write header to a buffer.  Borrowing logic from HttpSM::write_header_into_buffer.
   // Seems like a function like this ought to be in HTTPHdr directly
@@ -305,7 +309,7 @@ Http2Stream::change_state(uint8_t type, uint8_t flags)
   case Http2StreamState::HTTP2_STREAM_STATE_OPEN:
     if (type == HTTP2_FRAME_TYPE_RST_STREAM) {
       _state = Http2StreamState::HTTP2_STREAM_STATE_CLOSED;
-    } else if (type == HTTP2_FRAME_TYPE_DATA) {
+    } else if (type == HTTP2_FRAME_TYPE_HEADERS || type == HTTP2_FRAME_TYPE_DATA) {
       if (recv_end_stream) {
         _state = Http2StreamState::HTTP2_STREAM_STATE_HALF_CLOSED_REMOTE;
       } else if (send_end_stream) {

@@ -157,6 +157,8 @@ extern int URL_LEN_MMST;
 
 /* Public */
 bool validate_host_name(std::string_view addr);
+bool validate_scheme(std::string_view scheme);
+
 void url_init();
 
 URLImpl *url_create(HdrHeap *heap);
@@ -209,7 +211,7 @@ void url_fragment_set(HdrHeap *heap, URLImpl *url, const char *value, int length
 constexpr bool USE_STRICT_URI_PARSING = true;
 
 ParseResult url_parse(HdrHeap *heap, URLImpl *url, const char **start, const char *end, bool copy_strings,
-                      bool strict_uri_parsing = false, bool verify_host_characters = true);
+                      int strict_uri_parsing = false, bool verify_host_characters = true);
 
 constexpr bool COPY_STRINGS = true;
 

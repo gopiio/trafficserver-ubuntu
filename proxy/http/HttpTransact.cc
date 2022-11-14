@@ -240,9 +240,6 @@ parentExists(HttpTransact::State *s)
 inline static void
 nextParent(HttpTransact::State *s)
 {
-  TxnDebug("parent_down", "sm_id[%" PRId64 "] connection to parent %s failed, conn_state: %s, request to origin: %s",
-           s->state_machine->sm_id, s->parent_result.hostname, HttpDebugNames::get_server_state_name(s->current.state),
-           s->request_data.get_host());
   url_mapping *mp = s->url_map.getMapping();
   if (mp && mp->strategy) {
     // NextHop only has a findNextHop() function.
@@ -3855,9 +3852,12 @@ HttpTransact::error_log_connection_failure(State *s, ServerState_t conn_state)
            ats_ip_ntop(&s->current.server->dst_addr.sa, addrbuf, sizeof(addrbuf)));
 
   if (s->current.server->had_connect_fail()) {
-    char *url_str = s->hdr_info.client_request.url_string_get(&s->arena);
-    int host_len;
-    const char *host_name_ptr = s->unmapped_url.host_get(&host_len);
+    char *url_str             = s->hdr_info.client_request.url_string_get(&s->arena);
+    int host_len              = 0;
+    const char *host_name_ptr = "";
+    if (s->unmapped_url.valid()) {
+      host_name_ptr = s->unmapped_url.host_get(&host_len);
+    }
     std::string_view host_name{host_name_ptr, size_t(host_len)};
     TxnDebug("dead_server", "%s",
              lbw()
