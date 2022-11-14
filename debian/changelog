@@ -1,3 +1,10 @@
+trafficserver (9.1.1+ds-3) jammy; urgency=medium
+
+  * Remove mime hdr check
+  * Remove maxmind
+
+ -- Steve Langasek <steve.langasek@ubuntu.com>  Mon, 14 Nov 2022 07:28:10 +0000
+
 trafficserver (9.1.1+ds-2build1) jammy; urgency=medium
 
   * No-change rebuild against libssl3
